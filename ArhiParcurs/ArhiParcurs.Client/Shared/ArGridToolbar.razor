@@ -1,0 +1,36 @@
+﻿@using Syncfusion.Blazor.Navigations
+<SfToolbar>
+    <ToolbarEvents Clicked="ToolbarClickHandler"></ToolbarEvents>
+    <ToolbarItems>
+        <ToolbarItem Id="add" PrefixIcon="e-icons e-plus" Text="Adaugare" TooltipText="Adauga Document"></ToolbarItem>
+        <ToolbarItem Id="edit" PrefixIcon="e-icons e-edit" Text="Editare" TooltipText="Editeaza Document"></ToolbarItem>
+        <ToolbarItem Id="delete" PrefixIcon="e-icons e-trash" Text="Stergere" TooltipText="Sterge Document"></ToolbarItem>
+        <ToolbarItem Type="ItemType.Separator"></ToolbarItem>
+        <ToolbarItem Id="excelexport" Align="ItemAlign.Right" Type="ItemType.Button" OnClick="ExportExcel" Text="Excel" PrefixIcon="bi bi-file-earmark-excel" TooltipText="Export excel">
+
+        </ToolbarItem>
+        @AdditionalToolbars
+    </ToolbarItems>
+</SfToolbar>
+
+@code {
+    [Parameter] public EventCallback<Syncfusion.Blazor.Navigations.ClickEventArgs> ToolbarClickHandler { get; set; }
+    [Parameter] public EventCallback ExportExcel { get; set; }
+    [Parameter] public string CheckBoxTooltip { get; set; }
+    [Parameter] public bool CheckBox { get; set; }
+    [Parameter] public bool CheckBoxVisible { get; set; } = false;
+    private bool checkBox { get; set; }
+    [Parameter] public EventCallback<bool> CheckBoxChanged { get; set; } 
+    [Parameter] public RenderFragment AdditionalToolbars { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        //checkBox = this.CheckBox;
+    }
+
+    private async Task onChange(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        await CheckBoxChanged.InvokeAsync(checkBox);
+        StateHasChanged();
+    }
+}

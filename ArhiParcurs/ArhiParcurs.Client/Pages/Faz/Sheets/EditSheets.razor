@@ -1,0 +1,29 @@
+﻿@page "/sheets/editsheet/{SheetId:int}"
+@using ArhiParcurs.Client.Services
+@using ArhiParcurs.Shared.Models
+
+<SheetsForm HeaderText="Editare foaie de parcurs" SheetId="SheetId" SheetModel="SheetToEdit" SubmitForm="SubmitForm"></SheetsForm>
+@code {
+    [Inject] ISheetService SheetService { get; set; }
+    [Parameter] public int SheetId { get; set; }
+    [Inject] NavigationManager NavigationManager { get; set; }
+    private Sheet SheetToEdit { get; set; } = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (SheetId != 0)
+        {
+            var sheets = await SheetService.GetSheets($"?$filter=Id eq {SheetId}&$expand=SheetRoutes,RefuelsList");
+            if (sheets != null && sheets.Count > 0)
+                SheetToEdit = sheets.FirstOrDefault();
+        }
+    }
+    private async Task SubmitForm()
+    {
+        var isSuccess = await SheetService.UpdateSheet(SheetId,SheetToEdit);
+        if(isSuccess)
+        {
+            NavigationManager.NavigateTo("/sheets");
+        }
+    }
+}

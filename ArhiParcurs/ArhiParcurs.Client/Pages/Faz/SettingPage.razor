@@ -1,0 +1,54 @@
+﻿@page "/companySettings"
+@using ArhiParcurs.Shared
+@using ArhiParcurs.Shared.Models
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Inputs
+@attribute [Authorize]
+<h3>Date firma</h3>
+<EditForm Model="SettingModel" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    <div class="row">
+        <div class="col">
+            <SfTextBox @bind-Value="SettingModel.DenumireFirma" Placeholder="Firma" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+        </div>
+        <div class="col">
+            <SfTextBox @bind-Value="SettingModel.Adresa" Placeholder="Adresa" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <SfTextBox @bind-Value="SettingModel.CUI" Placeholder="Cui" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+        </div>
+        <div class="col">
+            <SfTextBox @bind-Value="SettingModel.NrInreg" Placeholder="Nr.Inreg." FloatLabelType="FloatLabelType.Always"></SfTextBox>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <SfCheckBox @bind-Checked="SettingModel.WithoutPurpose" Label="Fara scop"></SfCheckBox>
+        </div>
+        <div class="col">
+            <SfCheckBox @bind-Checked="SettingModel.WithoutRoundtrip" Label="Fara Tur/Retur"></SfCheckBox>
+        </div>
+        <div class="col">
+            <SfCheckBox @bind-Checked="SettingModel.WithoutRoutes" Label="Fara rute"></SfCheckBox>
+        </div>
+    </div>
+    <br />
+    <SfButton IsPrimary="true" Content="Salvare modificari"></SfButton>
+</EditForm>
+
+@code {
+    private Setting SettingModel { get; set; } = new();
+    [Inject] HttpClient httpClient { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        var response= await httpClient.GetFromJsonAsync<ODataResponse<Setting>>("api/Settings?$top=1");
+        SettingModel = response.Value.FirstOrDefault();
+    }
+
+    private async void OnValidSubmit()
+    {
+        await httpClient.PutAsJsonAsync($"api/Settings({SettingModel.Id})", SettingModel);
+    }
+}

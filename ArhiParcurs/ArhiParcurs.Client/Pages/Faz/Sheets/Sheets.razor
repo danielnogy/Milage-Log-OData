@@ -1,0 +1,94 @@
+﻿@page "/sheets"
+@page "/"
+@using ArhiParcurs.Client.Shared
+@using ArhiParcurs.Shared.Models
+@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.DropDowns
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Inputs
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.Popups
+@inject IJSRuntime jSRuntime
+@* @attribute [Authorize] *@
+<SfDropDownList TItem="Branch" TValue="int"
+                Placeholder="Filiala" FloatLabelType="FloatLabelType.Always"
+                EnableVirtualization=true
+                AllowFiltering="true" FilterType="Syncfusion.Blazor.DropDowns.FilterType.Contains">
+    <SfDataManager Url="api/branches" Adaptor="Adaptors.ODataV4Adaptor"></SfDataManager>
+    <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
+</SfDropDownList>
+<h3>Foi de parcurs</h3>
+<ArGrid @ref="Grid" TValue="Sheet" ApiURL="api/sheets?$expand=Vehicle,Driver" ApiDeleteURL="api/sheets" AddUrl="/sheets/addsheet" EditEvent="EditRecord">
+    <ArGridColumns>
+        <GridColumn Field="@nameof(Sheet.Id)" IsPrimaryKey="true" IsIdentity="true" Visible="false"></GridColumn>
+        <GridColumn Field="@nameof(Sheet.Number)" HeaderText="Numar"></GridColumn>
+        <GridColumn Field="Driver.Name" HeaderText="Sofer"></GridColumn>
+        <GridColumn Field="Vehicle.Number" HeaderText="Numar Vehicul"></GridColumn>
+        <GridColumn HeaderText="Marca vehicul">
+            <Template>
+                @{
+                    var data = context as Sheet;
+                }
+                <div>@(data.Vehicle.Brand + " "+data.Vehicle.Model)</div>
+            </Template>
+        </GridColumn>
+        <GridColumn Field="@nameof(Sheet.DateBegin)" HeaderText="Din data" Format="dd/MM/yyyy HH:mm"></GridColumn>
+        <GridColumn Field="@nameof(Sheet.DateEnd)" HeaderText="La data" Format="dd/MM/yyyy HH:mm"></GridColumn>
+    </ArGridColumns>
+    <AdditionalToolbars>
+        <ToolbarItem Id="pdfexport" Align="ItemAlign.Right" TooltipText="Selectati o foaie de parcurs pentru export FAZ" Type="ItemType.Button" OnClick="ExportFAZ" Text="F.A.Z." PrefixIcon="e-icons e-export-pdf"></ToolbarItem>
+    </AdditionalToolbars>
+</ArGrid>
+<br />
+<hr />
+<br />
+<div class="row">
+    <div class="col-4">
+        <RaportCentralizare></RaportCentralizare>
+    </div>
+    <div class="col-4">
+        <RaportCentralizare Url="invoicing/exportProiect" HeaderText="Consum per proiect"></RaportCentralizare>
+    </div>
+
+</div>
+@code {
+    private ArGrid<Sheet> Grid { get; set; }
+    [Inject] NavigationManager navigationManager { get; set; }
+    [Inject] HttpClient httpClient { get; set; }
+    [Inject] public SfDialogService SfDialogService { get; set; }
+
+    public async Task EditRecord()
+    {
+        var selectedRecords = await Grid.Grid.GetSelectedRecordsAsync();
+        if (selectedRecords.Count() == 0)
+        {
+            await SfDialogService.AlertAsync("Nicio inregistrare selectata !", "Atentie!");
+        }
+        navigationManager.NavigateTo("/sheets/editsheet/" + selectedRecords.Select(x => x.Id).FirstOrDefault());
+    }
+    public async Task ExportFAZ()
+    {
+        var selectedRecords = await Grid.Grid.GetSelectedRecordsAsync();
+        if (selectedRecords.Count() != 0)
+        {
+            var modelRaportare = new ReportRequest
+                {
+                    SheetId = selectedRecords.FirstOrDefault().Id,
+                };
+            var response = await httpClient.PostAsJsonAsync("invoicing/exportFAZ", modelRaportare);
+            if (response.IsSuccessStatusCode)
+            {
+                // Extract the filename from the Content-Disposition header
+                var contentDisposition = response.Content.Headers.ContentDisposition;
+                var fileName = contentDisposition?.FileNameStar ?? contentDisposition?.FileName ?? "downloaded-file.pdf";
+
+                var fileContent = await response.Content.ReadAsByteArrayAsync();
+
+                await jSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(fileContent));
+
+            }
+        }
+
+    }
+}

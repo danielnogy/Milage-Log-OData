@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35125.118
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArhiParcurs", "ArhiParcurs\ArhiParcurs\ArhiParcurs.csproj", "{F52AB740-7037-4F5B-9218-3880F4F96E46}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArhiParcurs.Client", "ArhiParcurs\ArhiParcurs.Client\ArhiParcurs.Client.csproj", "{1A8F5761-26BF-469F-8095-354DAA0551DB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArhiParcurs.Shared", "ArhiParcurs.Shared\ArhiParcurs.Shared.csproj", "{7FEB7EFD-92A9-412F-A43B-E738EB508643}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArhiParcurs.Components", "ArhiParcurs.Components\ArhiParcurs.Components.csproj", "{A242CB69-422B-4C7C-86BE-5D85FA2DFB61}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F52AB740-7037-4F5B-9218-3880F4F96E46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F52AB740-7037-4F5B-9218-3880F4F96E46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F52AB740-7037-4F5B-9218-3880F4F96E46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F52AB740-7037-4F5B-9218-3880F4F96E46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A8F5761-26BF-469F-8095-354DAA0551DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A8F5761-26BF-469F-8095-354DAA0551DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A8F5761-26BF-469F-8095-354DAA0551DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A8F5761-26BF-469F-8095-354DAA0551DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FEB7EFD-92A9-412F-A43B-E738EB508643}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FEB7EFD-92A9-412F-A43B-E738EB508643}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FEB7EFD-92A9-412F-A43B-E738EB508643}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FEB7EFD-92A9-412F-A43B-E738EB508643}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A242CB69-422B-4C7C-86BE-5D85FA2DFB61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A242CB69-422B-4C7C-86BE-5D85FA2DFB61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A242CB69-422B-4C7C-86BE-5D85FA2DFB61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A242CB69-422B-4C7C-86BE-5D85FA2DFB61}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {209694B0-94B4-44A3-88DB-9EC962A75C97}
+	EndGlobalSection
+EndGlobal

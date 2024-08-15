@@ -1,0 +1,27 @@
+﻿@page "/increases"
+@using ArhiParcurs.Shared.Models
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Inputs
+@attribute [Authorize]
+<h3>Sporuri de consum</h3>
+
+<SfGrid TValue="ConsumptionIncrease" AllowPaging="true" AllowSorting="true" AllowFiltering="true"
+        AllowExcelExport="true" Toolbar="@(new List<string>(){"Add","Edit","Delete"})">
+    <GridEditSettings AllowAdding="true" AllowDeleting="true" AllowEditing="true" Mode="EditMode.Dialog"></GridEditSettings>
+    <GridPageSettings PageSize="20"></GridPageSettings>
+    <SfDataManager Url="api/consumptionincreases"  Adaptor="Syncfusion.Blazor.Adaptors.ODataV4Adaptor"></SfDataManager>
+    <GridColumns>
+        <GridColumn Field=@nameof(ConsumptionIncrease.Id) IsIdentity="true" IsPrimaryKey="true" Visible="false"></GridColumn>
+        <GridColumn Field=@nameof(ConsumptionIncrease.Name) HeaderText="Denumire"></GridColumn>
+        <GridColumn Field=@nameof(ConsumptionIncrease.Percent) HeaderText="TVA" Type="ColumnType.Decimal" Format="N1"></GridColumn>
+    </GridColumns>
+</SfGrid>
+
+@code {
+    public void onChange(ChangeEventArgs<decimal> args)
+    {
+        if (args.PreviousValue != (args.Value * 100))
+            args.Value = args.Value / 100;
+    }
+}

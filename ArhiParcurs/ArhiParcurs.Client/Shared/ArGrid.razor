@@ -1,0 +1,174 @@
+﻿@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.SplitButtons
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.Popups
+@typeparam TValue
+
+<div>
+    <SfGrid @ref="Grid" EnablePersistence="true" Query="@Query" RowHeight="25"  TValue="TValue" AllowPaging=true AllowExcelExport=true AllowReordering="true" AllowSorting=true AllowTextWrap=true AllowPdfExport=true AllowFiltering=true Toolbar="@(UseDefaultToolbar? Toolbar : null)">
+        <GridSelectionSettings Mode="Syncfusion.Blazor.Grids.SelectionMode.Row" Type="Syncfusion.Blazor.Grids.SelectionType.Single"></GridSelectionSettings>
+        <GridFilterSettings ShowFilterBarStatus=true ImmediateModeDelay="600" Mode="FilterBarMode.Immediate" Type="Syncfusion.Blazor.Grids.FilterType.FilterBar"></GridFilterSettings>
+        <GridEvents OnRecordDoubleClick="OnRecordDoubleClick" TValue="TValue" RowSelecting="OnRowSelected"></GridEvents>
+        @* <SfDataManager  CrossDomain="true" Url=@URL  Adaptor="Adaptors.ODataV4Adaptor"></SfDataManager> *@
+        <ArDataManager URL="@ApiURL" RemoveUrl="@ApiDeleteURL" PatchUrl="@ApiEditURL"></ArDataManager>
+        @if (UseDefaultToolbar)
+        {
+            <GridEditSettings AllowDeleting="true" AllowAdding=true AllowEditing=true Mode="EditMode.Dialog" ShowDeleteConfirmDialog=true></GridEditSettings>
+        }
+        else
+        {
+            <GridEditSettings AllowDeleting="true" ShowDeleteConfirmDialog=true></GridEditSettings>
+        }
+        <GridPageSettings PageSize=@PageSize PageSizes="pagesize" CurrentPage="1"></GridPageSettings>
+        @if (DetailTemplate !=null)
+        {
+
+            <GridTemplates DetailTemplate="@((target)=>DetailTemplate(target))">
+                <ToolbarTemplate>
+                    
+                    <ArGridToolbar CheckBoxVisible="CheckBoxVisible" CheckBox="checkBox" CheckBoxChanged="CheckboxChange" CheckBoxTooltip="Inchise" AdditionalToolbars="@AdditionalToolbars" ExportExcel="ExportExcel" ToolbarClickHandler="ToolbarClickHandler"></ArGridToolbar>
+                </ToolbarTemplate>
+            </GridTemplates>
+        }
+        else
+        {
+            <GridTemplates >
+                <ToolbarTemplate>
+                    <ArGridToolbar CheckBoxVisible="CheckBoxVisible" CheckBox="checkBox" CheckBoxChanged="CheckboxChange" CheckBoxTooltip="Inchise" AdditionalToolbars="@AdditionalToolbars" ExportExcel="ExportExcel" ToolbarClickHandler="ToolbarClickHandler"></ArGridToolbar>
+                </ToolbarTemplate>
+            </GridTemplates>
+        }
+         
+        @if (ArGridColumns != null)
+        {
+            <GridColumns>
+                @ArGridColumns
+            </GridColumns>
+        }
+        @ChildContent
+    </SfGrid>
+</div>
+
+@code {
+    [Parameter] public string ApiURL { get; set; }
+    [Parameter] public string ApiAddURL { get; set; }
+    [Parameter] public string ApiEditURL { get; set; }
+    [Parameter] public string ApiDeleteURL { get; set; }
+    [Parameter] public string URL { get; set; }
+    [Parameter] public string AddUrl { get; set; }
+    [Parameter] public EventCallback EditEvent { get; set; }
+    [Parameter] public Query Query { get; set; }
+    [Parameter] public string HeaderText { get; set; }
+    [Parameter] public RenderFragment ArGridColumns { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public EventCallback ExportPdfMethod { get; set; } 
+    [Parameter] public int PageSize { get; set; } = 20;
+    [Parameter] public bool UseDefaultToolbar { get; set; } = false;
+    [Parameter] public bool CheckBox { get; set; } 
+    [Parameter] public EventCallback<bool> CheckBoxChanged { get; set; } 
+    [Parameter] public bool CheckBoxVisible { get; set; }
+    private bool checkBox { get; set; } 
+    [Parameter] public RenderFragment AdditionalToolbars { get; set; }
+    [Parameter] public EventCallback<RowSelectingEventArgs<TValue>> OnRowSelected { get; set; }
+    [Inject] public NavigationManager navManager { get; set; }
+    [Inject] public SfDialogService SfDialogService { get; set; }
+    [Inject] public NavigationManager NavigationManager { get; set; }
+    [Parameter] public RenderFragment<object>? DetailTemplate { get; set; } = null;
+    public SfGrid<TValue> Grid { get; set; }
+    private List<string> Toolbar { get; set; } = new List<string>() { "Add", "Edit", "Delete", "ExcelExport" };
+    public object[] pagesize = new object[] { 5, 10, 20, 50,100 };
+    private async Task CheckboxChange(bool value)
+    {
+        await CheckBoxChanged.InvokeAsync(value);
+        StateHasChanged();
+    }
+    private async void OnRecordDoubleClick(RecordDoubleClickEventArgs<TValue> args)
+    {
+        await Grid.SelectRowAsync(args.RowIndex);
+        await EditEvent.InvokeAsync();
+    }
+
+    public async Task ToolbarClickHandler(Syncfusion.Blazor.Navigations.ClickEventArgs args)
+    {
+        if (args.Item.Id == "add")
+        {
+            if (!UseDefaultToolbar)
+                navManager.NavigateTo(AddUrl);
+            else    
+                await Grid.AddRecordAsync();
+        }
+        if (args.Item.Id == "edit")
+        {
+            if (!UseDefaultToolbar)
+                await EditEvent.InvokeAsync();
+            else
+                await Grid.StartEditAsync();
+        }
+        if (args.Item.Id == "delete")
+        {
+
+            await Grid.DeleteRecordAsync();
+            //await Grid.Refresh();
+        }
+    }
+    public async Task FilterByColumnAsync(string filterField, string filterOperation, object filterValue,string predicate = null)
+    {
+        await this.Grid.FilterByColumnAsync(filterField, filterOperation, filterValue,predicate);
+        //await this.Grid.FilterByColumnAsync("Data", "greaterthanorequal", new DateTime(2024, 1, 1));
+    }
+    public async Task ClearFilteringAsync()
+    {
+        await Grid.ClearFilteringAsync();
+    }
+    private async void ExportExcel()
+    {
+        ExcelExportProperties ExportProperties = new ExcelExportProperties();
+        ExcelTheme Theme = new ExcelTheme();
+        ExcelStyle ThemeStyle = new ExcelStyle()
+            {
+                FontName = "Segoe UI",
+                FontColor = "#666666",
+                FontSize = 10
+            };
+        Theme.Header = ThemeStyle;
+        ExportProperties.FileName = $"{HeaderText}" + ".xlsx";
+        ExportProperties.ExportType = ExportType.AllPages;
+        ExportProperties.Theme = Theme;
+        await Grid.ExportToExcelAsync();
+    }
+    public async Task RefreshGrid()
+    {
+        await Grid.Refresh();
+    }   
+    private async void DeleteRecord()
+    {
+        // var selectedRecords = await Grid.GetSelectedRecordsAsync();
+        // if (selectedRecords.Count == 0)
+        // {
+        //     await SfDialogService.AlertAsync("Nicio inregistrare selectata !","Atentie!");
+        //     return;
+        // }
+        // var dialog = await SfDialogService.ConfirmAsync("Sunteti sigur ca doriti stergerea acestei inregistrari?", "Confirmare stergere", new Syncfusion.Blazor.Popups.DialogOptions() { ShowCloseIcon = true, CloseOnEscape = true, Width = "400px" });
+        // if(dialog)
+        // {
+        //     if (selectedRecords.Count() > 0)
+        //     {
+        //var selectedData = await Grid.GetSelectedRecordsAsync();
+        await Grid.DeleteRecordAsync();
+        // await Grid.Refresh();
+        //     }
+        // }
+
+    }
+    protected async override Task OnParametersSetAsync()
+    {
+        if (ApiAddURL == null)
+            ApiAddURL = ApiURL;
+        if (ApiEditURL == null)
+            ApiEditURL = ApiURL;
+        if (ApiDeleteURL == null)
+            ApiDeleteURL = ApiURL;
+    }
+}

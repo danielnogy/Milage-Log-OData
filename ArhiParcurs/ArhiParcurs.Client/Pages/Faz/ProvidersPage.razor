@@ -1,0 +1,24 @@
+﻿@page "/providers"
+@using ArhiParcurs.Shared.Models
+@using ArhiParcurs.Shared.Models.Enums
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.DropDowns
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Inputs
+@attribute [Authorize]
+<h3>Furnizori</h3>
+
+<SfGrid TValue="Provider" AllowPaging="true" AllowSorting="true" AllowFiltering="true"
+        AllowExcelExport="true" Toolbar="@(new List<string>(){"Add","Edit","Delete"})">
+    <GridEditSettings AllowAdding="true" AllowDeleting="true" AllowEditing="true" Mode="EditMode.Dialog"></GridEditSettings>
+    <GridPageSettings PageSize="20"></GridPageSettings>
+    <SfDataManager Url="api/providers"  Adaptor="Syncfusion.Blazor.Adaptors.ODataV4Adaptor"></SfDataManager>
+    <GridColumns>
+        <GridColumn Field=@nameof(Provider.Id) IsIdentity="true" IsPrimaryKey="true" Visible="false"></GridColumn>
+        <GridColumn Field=@nameof(Provider.Name) HeaderText="Nume"></GridColumn>
+    </GridColumns>
+</SfGrid>
+
+@code {
+
+}

@@ -1,0 +1,47 @@
+﻿@page "/partners"
+@using ArhiParcurs.Shared.Models
+@using ArhiParcurs.Shared.Models.Enums
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.DropDowns
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Inputs
+@attribute [Authorize]
+<h3>Parteneri</h3>
+
+<SfGrid TValue="Partner" AllowPaging="true" AllowSorting="true" AllowFiltering="true"
+        AllowExcelExport="true" Toolbar="@(new List<string>(){"Add","Edit","Delete"})">
+    <GridEditSettings AllowAdding="true" AllowDeleting="true" AllowEditing="true" Mode="EditMode.Dialog"></GridEditSettings>
+    <GridPageSettings PageSize="20"></GridPageSettings>
+    <SfDataManager Url="api/partners"  Adaptor="Syncfusion.Blazor.Adaptors.ODataV4Adaptor"></SfDataManager>
+    <GridColumns>
+        <GridColumn Field=@nameof(Partner.Id) IsIdentity="true" IsPrimaryKey="true" Visible="false"></GridColumn>
+        <GridColumn Field=@nameof(Partner.Name) HeaderText="Nume"></GridColumn>
+        <GridColumn Field=@nameof(Partner.PhoneNumber) HeaderText="Telefon"></GridColumn>
+        <GridColumn Field=@nameof(Partner.SSN) HeaderText="CNP"></GridColumn>
+        <GridColumn Field=@nameof(Partner.Email)></GridColumn>
+        <GridColumn Field=@nameof(Partner.Function) HeaderText="Functie"></GridColumn>
+        <GridColumn Field=@nameof(Partner.PartnerState) HeaderText="Stare">
+            <Template>
+                @{
+                    var data = context as Partner;
+                }
+                @* <span>@Enum.GetName(data.PartnerState)</span> *@
+            </Template>
+            <EditTemplate>
+                @{
+                    var data = context as Partner;
+                }
+                <SfDropDownList TValue="PartnerStateEnum?" TItem="string"
+                    DataSource="@(Enum.GetNames(typeof(PartnerStateEnum)))"
+                    Value="(PartnerStateEnum)data.PartnerState" Placeholder="Stare" FloatLabelType="FloatLabelType.Always"
+                >
+                    <DropDownListEvents TValue="PartnerStateEnum?" TItem="string" ValueChange="@((args)=>{data.PartnerState=(int)args.Value;})"></DropDownListEvents>
+                </SfDropDownList>
+            </EditTemplate>
+        </GridColumn>
+    </GridColumns>
+</SfGrid>
+
+@code {
+
+}

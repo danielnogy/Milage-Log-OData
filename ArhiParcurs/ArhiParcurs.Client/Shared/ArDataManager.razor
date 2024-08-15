@@ -1,0 +1,42 @@
+﻿@using Syncfusion.Blazor.Data
+<SfDataManager CrossDomain="true" Url=@URL InsertUrl="@URL" UpdateUrl="@PatchUrl" RemoveUrl="@RemoveUrl"
+               Adaptor="@Adaptor" HttpClientInstance="httpClient" >
+</SfDataManager>
+
+@code {
+    [Parameter] public string URL { get; set; }
+    [Parameter] public string PatchUrl { get; set; }
+    [Parameter] public string RemoveUrl { get; set; }
+    [Parameter] public Syncfusion.Blazor.Adaptors Adaptor { get; set; } = Syncfusion.Blazor.Adaptors.ODataV4Adaptor;
+    [Parameter] public Query Query { get; set; }
+    [Inject] public NavigationManager NavigationManager { get; set; }
+    [Inject] AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+    private string Headers { get; set; }
+    [Inject] HttpClient httpClient { get; set; }
+    protected override async Task OnParametersSetAsync()
+    {
+        //get token from auth state provider
+        // var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        // var user = authState.User;
+        
+        if (PatchUrl == null)
+            PatchUrl = URL;
+        if (RemoveUrl == null)
+            RemoveUrl = URL;
+        //var tenantName = NavigationManager.GetSubDomain();
+        // httpClient.BaseAddress = new Uri(BaseUrl);
+        // if (!httpClient.DefaultRequestHeaders.Contains("Authorization"))
+        // {
+        //     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await AccessTokenProvider.TryGetAccessToken());
+        // }
+
+        // if (!httpClient.DefaultRequestHeaders.Contains("Bp-Tenant"))
+        // {
+        //     httpClient.DefaultRequestHeaders.Add("Bp-Tenant", tenantName);
+        // }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        //StateHasChanged();
+    }
+}

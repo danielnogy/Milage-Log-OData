@@ -1,0 +1,47 @@
+﻿@page "/fuels"
+@using ArhiParcurs.Shared.Models
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Inputs
+@attribute [Authorize]
+<h3>Combustibil</h3>
+
+<SfGrid TValue="Fuel" AllowPaging="true" AllowSorting="true" AllowFiltering="true"
+        AllowExcelExport="true" Toolbar="@(new List<string>(){"Add","Edit","Delete"})">
+    <GridEditSettings AllowAdding="true" AllowDeleting="true" AllowEditing="true" Mode="EditMode.Dialog">
+        <Template>
+            @{
+                var data = context as Fuel;
+            }
+            <EditForm Model="data" Context="editFormContext">
+                <DataAnnotationsValidator></DataAnnotationsValidator>
+                <div class="row">
+                    <div class="col">
+                        <SfTextBox @bind-Value="data.Name" Placeholder="Denumire" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                    </div>
+                    <div class="col">
+                        <SfNumericTextBox TValue="decimal" @bind-Value="data.TVA" Placeholder="TVA" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                    </div>
+                </div>
+            </EditForm>
+        </Template>
+    </GridEditSettings>
+    <GridPageSettings PageSize="20"></GridPageSettings>
+    <SfDataManager Url="api/fuels"  Adaptor="Syncfusion.Blazor.Adaptors.ODataV4Adaptor"></SfDataManager>
+    <GridColumns>
+        <GridColumn Field=@nameof(Fuel.Id) IsIdentity="true" IsPrimaryKey="true" Visible="false"></GridColumn>
+        <GridColumn Field=@nameof(Fuel.Name) HeaderText="Denumire"></GridColumn>
+        <GridColumn Field=@nameof(Fuel.TVA) HeaderText="TVA" Type="ColumnType.Decimal" Format="N2">
+            <Template>
+                @{
+                    var data = context as Fuel;
+                }
+                <div>@data.TVA%</div>
+            </Template>
+        </GridColumn>
+    </GridColumns>
+</SfGrid>
+
+@code {
+
+}

@@ -1,0 +1,485 @@
+﻿@using Syncfusion.Blazor.Calendars
+@using Syncfusion.Blazor.Inputs
+@using Syncfusion.Blazor.Navigations
+@implements IDisposable
+@inject NavigationManager navManager
+@inherits LayoutComponentBase
+
+@* <AuthorizeView Context="appauthcontext">
+    <Authorized> *@
+<div>
+    @*Initialize the Toolbar component*@
+    <SfToolbar OverflowMode="OverflowMode.Popup" HtmlAttributes=HtmlAttributeToolbar EnableCollision=true>
+        @* <ToolbarEvents Clicked="@Toggle"></ToolbarEvents>  *@
+        <ToolbarItems>
+            <ToolbarItem PrefixIcon="e-tbr-menu-icon e-icons" TooltipText="Menu" OnClick="@Toggle"></ToolbarItem>
+            <ToolbarItem Align="ItemAlign.Left" OnClick="@(()=>navManager.NavigateTo("/"))">
+                <Template>
+                    <div class="d-flex justify-content-center align-items-center">
+                        @* <img src="brand-blue.svg" width="30px" /> *@
+                        <div class="e-folder primary-color d-flex ">
+                            <div class="e-folder-name align-content-end custom-font">F.A.Z.</div>
+                        </div>
+                    </div>
+                </Template>
+            </ToolbarItem>
+            <AuthorizeView >
+                <Authorized>
+@*                     <ToolbarItem ShowAlwaysInPopup="false" Align="ItemAlign.Right" PrefixIcon="e-icons e-user" TooltipText="Utilizatori" Text="Utilizatori" OnClick="@(()=>navManager.NavigateTo("/users",false))"></ToolbarItem>
+ *@                    <ToolbarItem ShowAlwaysInPopup="false" Align="ItemAlign.Right">
+                        <Template>
+                            <CultureSwitcher />
+                        </Template>
+                    </ToolbarItem>
+                    @* <ToolbarItem ShowAlwaysInPopup="true" PrefixIcon="e-icons e-lock" TooltipText="Roluri" Text="Roluri" OnClick="@(()=>navManager.NavigateTo("/roles"))"></ToolbarItem> *@
+                    <ToolbarItem ShowAlwaysInPopup="false" Align="ItemAlign.Right" PrefixIcon="e-icons e-settings" TooltipText="Setarile firmei" Text="Setari" OnClick="@(()=>navManager.NavigateTo("/companySettings"))"></ToolbarItem>
+                </Authorized>
+            </AuthorizeView>
+            <AuthorizeView>
+                <Authorized>
+                    <ToolbarItem ShowAlwaysInPopup="true" PrefixIcon="e-icons e-arrow-close" TooltipText="Deconectare cont" Text="Deconectare">
+                        <Template>
+                            <form action="Account/Logout" method="post">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                                <button type="submit" class="nav-link">
+                                    <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                                </button>
+                            </form>
+                        </Template>
+                    </ToolbarItem>
+                </Authorized>
+                <NotAuthorized>
+                    <ToolbarItem Align="ItemAlign.Right" PrefixIcon="e-icons e-people" TooltipText="Inregistrare" Text="Inregistrare" OnClick="@(()=>navManager.NavigateTo($"/Account/Register?returnurl={currentUrl}",false))"></ToolbarItem>
+                    <ToolbarItem Align="ItemAlign.Right" PrefixIcon="e-icons e-arrow-right-up" TooltipText="Autentificare" Text="Autentificare" OnClick="@(()=>navManager.NavigateTo($"/Account/Login?returnurl={currentUrl}",false))"></ToolbarItem>
+                </NotAuthorized>
+            </AuthorizeView>
+            @*Toolbar item for users*@
+        </ToolbarItems>
+    </SfToolbar>
+</div>
+@*Initialize the Sidebar component*@
+<SfSidebar @attributes="@HtmlAttribute" EnableGestures=false Width="290px" Target=".e-main-content" Type="SidebarType.Auto" MediaQuery="(min-width:600px)" @bind-IsOpen="SidebarToggle">
+    <ChildContent>
+        <div class="main-menu px-2 py-2">
+            <div class="table-content mb-2">
+                <SfTextBox Placeholder="Cautare..." @oninput="OnSearch"></SfTextBox>
+            </div>
+            <div>
+                <SfTreeView @ref="MenuTree" ExpandOn="@Expand" FullRowNavigable=true TValue="TreeData">
+                    <TreeViewFieldsSettings Id="NodeId" IconCss="icon" NavigateUrl="NavigateUrl"
+                        Text="NodeText" DataSource="Treedata" HasChildren="HasChild" ParentID="Pid"></TreeViewFieldsSettings>
+                </SfTreeView>
+            </div>
+        </div>
+    </ChildContent>
+</SfSidebar>
+@*     </Authorized>
+</AuthorizeView> *@
+<main class="main-content" id="main-text">
+
+
+    <article class="content px-4 h-100" style="padding-bottom:80px">
+        @Body
+    </article>
+</main>
+
+
+
+@* <div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <CultureSwitcher @rendermode="@InteractiveAuto" />
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div> *@
+<Syncfusion.Blazor.Popups.SfDialogProvider />
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    private SfTreeView<TreeData>? MenuTree;
+    private string? currentUrl;
+    public bool SidebarToggle = true;
+    private string SearchText = "";
+    public bool isFiltered = false;
+    public bool EnableDock = false;
+    public string Target = ".maincontent";
+    public ExpandAction Expand = ExpandAction.Click;
+    Dictionary<string, object> HtmlAttribute = new Dictionary<string, object>()
+    {
+        {"class", "sidebar-treeview shadow-sm primary-color border-end" },
+    };
+    Dictionary<string, object> HtmlAttributeToolbar = new Dictionary<string, object>()
+    {
+        {"class", "sidebar-treeview shadow-sm primary-color fill fixed-toolbar" },
+    };
+    Dictionary<string, object> HtmlAttributeTree = new Dictionary<string, object>()
+    {
+        {"class", "primary-color" }
+    };
+    public class TreeData
+    {
+        public string NodeId { get; set; }
+        public string NodeText { get; set; }
+        public string IconCss { get; set; }
+        public bool HasChild { get; set; }
+        public string Pid { get; set; }
+        public string NavigateUrl { get; set; }
+    }
+    private List<TreeData> Treedata = new List<TreeData>();
+    public void Toggle()
+    {
+        SidebarToggle = !SidebarToggle;
+    }
+    private async Task SearchMenu()
+    {
+        // if (SearchText == "")
+        // {
+        //     Treedata = await GetGeneMeuItems();
+        //     isFiltered = false;
+        // }
+        // else
+        // {
+        //     var DataSource = await GetGeneMeuItems();
+        //     // Filter all the nodes of the Serached ID.
+        //     List<GeneMenuItem> filteredValues = DataSource.FindAll(e => e.NodeText.ToString().ToLower().Contains(SearchText.ToLower()));
+        //     List<GeneMenuItem> filteredDataSource = new List<GeneMenuItem>();
+        //     GeneMenuItem data = new GeneMenuItem();
+        //     for (int i = 0; i < filteredValues.Count; i++)
+        //     {
+        //         data = filteredValues[i];
+        //         if (data.Pid == null)
+        //         {
+        //             data.HasChild = false;
+        //             filteredDataSource.Add(data);
+        //             break;
+        //         }
+        //         while (data.Pid != null)
+        //         {
+        //             if (filteredDataSource.Exists(e => e.Id.Equals(data.Id))) { break; }
+        //             filteredDataSource.Add(data);
+        //             data = DataSource.Find(e => e.NodeId.Equals(data.Pid));
+        //         }
+        //         if (!filteredDataSource.Exists(e => e.Id.Equals(data.Id)))
+        //         {
+        //             filteredDataSource.Add(data);
+        //         }
+        //     }
+        //     // Update the TreeView based on the searched ID vallue.
+        //     Treedata = filteredDataSource;
+        //     isFiltered = true;
+        //     await MenuTree.ExpandAllAsync();
+        // }
+        // StateHasChanged();
+    }
+    private void OnSearch(Microsoft.AspNetCore.Components.ChangeEventArgs eventArgs)
+    {
+        if (eventArgs.Value != null)
+            SearchText = (string)eventArgs.Value;
+        // TimerObject.StopTimer();
+        // TimerObject.StartTimer();
+    }
+    protected override void OnInitialized()
+    {
+        Treedata.Add(new TreeData { NodeId = "01", NodeText = "Foi de parcurs", IconCss = "icon-microchip icon", NavigateUrl = "/sheets" });
+        Treedata.Add(new TreeData { NodeId = "02", NodeText = "Proiecte", IconCss = "icon-annotation-edit icon", NavigateUrl = "/projects" });
+        Treedata.Add(new TreeData { NodeId = "03", NodeText = "Vehicule", IconCss = "icon-docs icon", NavigateUrl = "/vehicles" });
+        Treedata.Add(new TreeData { NodeId = "04", NodeText = "Parteneri", IconCss = "icon-docs icon", NavigateUrl = "/partners" });
+        Treedata.Add(new TreeData { NodeId = "05", NodeText = "Sproruri de consum", IconCss = "icon-docs icon", NavigateUrl = "/increases" });
+        Treedata.Add(new TreeData { NodeId = "06", NodeText = "Combustibili", IconCss = "icon-docs icon", NavigateUrl = "/fuels" });
+        Treedata.Add(new TreeData { NodeId = "07", NodeText = "Furnizori", IconCss = "icon-docs icon", NavigateUrl = "/providers" });
+        Treedata.Add(new TreeData { NodeId = "08", NodeText = "Filiale", IconCss = "icon-docs icon", NavigateUrl = "/branches" });
+        currentUrl = navManager.ToBaseRelativePath(navManager.Uri);
+        navManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = navManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        navManager.LocationChanged -= OnLocationChanged;
+    }
+}
+
+<style>
+    .footer {
+        background-color: #f8f9fa;
+        padding: 0.5rem 0;
+        text-align: center;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+    }
+
+    .e-smaller {
+        font-size: x-small;
+    }
+
+
+    .fixed-toolbar {
+        position: fixed !important;
+        top: 0 !important;
+        width: 100% !important;
+        z-index: 1000 !important; /* Adjust this value as needed */
+    }
+
+    #wrapper {
+        width: 100%;
+    }
+
+    #main-text.main-content {
+        overflow: hidden;
+        padding-top: 38px;
+    }
+
+    #wrapper .sidebar-treeview {
+        z-index: 20 !important;
+    }
+
+    .sidebar-treeview .main-treeview .icon {
+        font-family: 'e-icons';
+        font-size: 16px;
+        margin: -4px 0;
+    }
+
+    .primary-color {
+        color: rgb(255,255,255);
+        font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+        font-weight: 400;
+        font-size: 1.3rem;
+    }
+
+
+    .sidebar-treeview .main-treeview .icon {
+        font-family: 'e-icons';
+        font-size: 16px;
+        margin-top: -4px;
+    }
+    /* sidebar colors */
+    .e-sidebar {
+        top: 38px !important;
+        position: fixed;
+        left: -1px !important;
+        /* background: rgb(47,164,231);
+                    background: linear-gradient(138deg, rgba(47,164,231,1) 0%, rgba(129,203,246,1) 50%); */
+    }
+
+    /* .e-treeview .e-list-item.e-hover > .e-fullrow, .e-treeview .e-list-item.e-node-focus > .e-fullrow, .e-treeview .e-list-item.e-active > .e-fullrow {
+                    background: #72c7f9 !important;
+                }
+                .e-treeview .e-list-text {
+                    color:white!important;
+                    font-weight: 450;
+                }
+
+                .e-treeview .e-list-item div.e-icons.interaction {
+                    color:white!important;
+                }  */
+
+    /* toolbar colors */
+    /* .e-toolbar {
+
+                }
+
+                    .e-toolbar .e-toolbar-item {
+                        background: rgb(47,164,231);
+                        //background: linear-gradient(138deg, rgba(47,164,231,1) 0%, rgba(167,221,254,1) 50%);
+                    }
+             */
+    .sidebar-treeview .main-treeview .icon-microchip::before {
+        content: '\e77c';
+    }
+
+    .sidebar-treeview .main-treeview .icon-annotation-edit::before {
+        content: '\e82a';
+    }
+
+    .sidebar-treeview .main-treeview .icon-docs::before {
+        content: '\e8f1';
+    }
+
+    .e-tbr-menu-icon::before {
+        content: '\e799';
+        font-family: 'e-icons';
+    }
+
+    .e-treeview .e-list-text {
+        color: white;
+        font-size: 14px;
+    }
+
+    .e-sidebar.e-left {
+        /*  border-right: 0 solid rgba(0, 0, 0, 0);
+            left: 0;
+            right: auto;
+            top: 0; */
+        background: rgb(30 42 68);
+    }
+
+
+    .e-toolbar {
+        background: rgb(30 42 68); /* CULOARE TOOLBAR */
+    }
+
+    .e-anchor-wrap {
+        color: rgb(255 255 255); /* culoare scris sidebar */
+        transition: 0.5s;
+    }
+
+        .e-anchor-wrap:hover {
+            color: rgb(30 42 68);
+        }
+
+    .e-fullrow { /* culori butoane sidebar */
+        background-color: rgb(50 62 88);
+        border-radius: 10px;
+        transition: 0.5s;
+    }
+
+        .e-fullrow:hover {
+            background-color: rgb(255 255 255);
+        }
+
+    .e-toolbar .e-toolbar-item .e-tbar-btn .e-tbar-btn-text { /* toolbar button text */
+        color: white;
+    }
+
+    .e-toolbar .e-toolbar-item .e-tbar-btn { /* toolbar button background*/
+        background: rgb(50 62 88);
+    }
+
+        .e-toolbar .e-toolbar-item .e-tbar-btn .e-icons { /*icon toolbar*/
+            color: white;
+        }
+
+    .e-toolbar .e-toolbar-item .e-tbar-btn { /* Toolbar button background */
+        background: rgb(50 62 88);
+        transition: background-color 0.5s, color 0.5s; /* Ensure smooth transition */
+    }
+
+        .e-toolbar .e-toolbar-item .e-tbar-btn:hover { /* Toolbar button hover state */
+            background: rgb(255 255 255);
+        }
+
+            .e-toolbar .e-toolbar-item .e-tbar-btn:hover .e-tbar-btn-text, /* Text color on button hover */
+            .e-toolbar .e-toolbar-item .e-tbar-btn:hover .e-icons { /* Icon color on button hover */
+                color: rgb(30 42 68);
+                transition: background-color 0.5s, color 0.5s; /* Smooth transition for color */
+            }
+
+    button.e-control.e-btn.e-lib.e-tbar-btn.e-icon-btn:focus {
+        background-color: white;
+    }
+
+    .e-toolbar .e-toolbar-item .e-tbar-btn:focus {
+        background: none;
+        border-radius: 4px;
+        color: #6c757d;
+        border-color: #6c757d;
+        border-style: solid;
+        border-width: 0;
+        box-shadow: 0 0 0 0px rgba(130, 138, 145, .5);
+    }
+
+    .e-toolbar .e-toolbar-items {
+        background: rgb(30 42 68);
+    }
+
+    .e-toolbar .e-toolbar-items {
+        background: rgb(30 42 68);
+    }
+
+    .e-toolbar .e-hor-nav {
+        background: rgb(30 42 68);
+        transition: background-color 0.5s, color 0.5s;
+    }
+
+        .e-toolbar .e-hor-nav:hover {
+            background: rgb(255 255 255);
+        }
+
+        .e-toolbar .e-hor-nav:focus {
+            background: rgb(30 42 68);
+            transition: 0.5s;
+        }
+
+        .e-toolbar .e-hor-nav:hover:active {
+            background: white;
+        }
+
+        /* Combine both hover states under the parent class */
+        .e-toolbar .e-hor-nav:hover,
+        .e-toolbar .e-popup-down-icon.e-icons:hover,
+        .e-toolbar .e-popup-up-icon.e-icons:hover {
+            /*   background: rgb(255, 255, 255); */
+            color: rgb(30, 42, 68);
+        }
+
+            /* Apply the same hover effect when hovering over the parent element */
+            .e-toolbar .e-hor-nav:hover .e-popup-down-icon.e-icons,
+            .e-toolbar .e-hor-nav:hover .e-popup-up-icon.e-icons,
+            .e-toolbar .e-popup-down-icon.e-icons:hover .e-hor-nav,
+            .e-toolbar .e-popup-up-icon.e-icons:hover .e-hor-nav {
+                /*  background: rgb(255, 255, 255); */
+                color: rgb(30, 42, 68);
+            }
+
+
+    .e-toolbar .e-popup-down-icon.e-icons, .e-toolbar .e-popup-up-icon.e-icons {
+        color: white;
+        transition: background-color 0.5s, color 0.5s;
+    }
+
+
+
+    .e-toolbar.e-toolpop .e-hor-nav.e-nav-active .e-icons, .e-toolbar.e-toolpop .e-hor-nav.e-nav-active:not(.e-expended-nav) .e-icons {
+        color: rgb(30 42 68);
+        transition: background-color 0.5s, color 0.5s;
+    }
+
+    .e-toolbar.e-toolpop .e-hor-nav.e-nav-active, .e-toolbar.e-toolpop .e-hor-nav.e-nav-active:not(.e-expended-nav) {
+        background: white;
+        transition: background-color 0.5s, color 0.5s;
+    }
+
+    .e-toolbar .e-hor-nav:focus {
+        background: rgb(30 42 68);
+    }
+
+    .nav-link {
+        background-color: rgb(50 62 88);
+        transition: color .5s ease-in-out, background-color .5s ease-in-out, border-color .5s ease-in-out;
+        color: white;
+        border: 2px solid transparent;
+        border-color: rgb(30 42 68);
+        border-radius: 5px;
+    }
+
+    .nav-link:focus, .nav-link:hover {
+        color: rgb(30 42 68);
+        background-color: rgb(255 255 255);
+        border-color: rgb(30, 42, 68);
+        border-radius:  5px;
+    }
+
+    /* .e-toolbar .e-toolbar-pop .e-toolbar-item > * {
+        background-color: transparent;
+    } */
+</style>

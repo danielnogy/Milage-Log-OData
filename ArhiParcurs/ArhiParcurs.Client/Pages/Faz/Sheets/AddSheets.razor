@@ -1,0 +1,25 @@
+﻿@page "/sheets/addsheet"
+@using ArhiParcurs.Client.Services
+@using ArhiParcurs.Shared.Models
+
+<SheetsForm HeaderText="Adauga foaie de parcurs" SheetModel="Sheet" SubmitForm="SubmitForm"></SheetsForm>
+@code {
+    [Inject] ISheetService SheetService { get; set; }
+    [Inject] NavigationManager NavigationManager { get; set; }
+    private Sheet Sheet { get; set; } = new Sheet() ;
+
+    private async Task SubmitForm()
+    {
+        try
+        {
+            await SheetService.PostSheet(Sheet);
+            NavigationManager.NavigateTo("/sheets");
+
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine(ex.InnerException);
+        }
+    }
+}

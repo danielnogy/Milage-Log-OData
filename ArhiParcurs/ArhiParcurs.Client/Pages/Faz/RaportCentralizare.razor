@@ -1,0 +1,46 @@
+﻿@using ArhiParcurs.Shared.Models
+@using Syncfusion.Blazor.Calendars
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Inputs
+@attribute [Authorize]
+<h6>@HeaderText</h6>
+<div class="row">
+    <div class="col-4">
+        <SfDatePicker TValue="DateTime" @bind-Value="StartDate" Placeholder="Din data" FloatLabelType="FloatLabelType.Always"></SfDatePicker>
+    </div>
+</div>
+<div class="row">
+    <div class="col-4">
+        <SfDatePicker TValue="DateTime" @bind-Value="EndDate" Placeholder="La data" FloatLabelType="FloatLabelType.Always"></SfDatePicker>
+    </div>
+</div>
+<br />
+<SfButton OnClick="ExportFAZ" Content="Generare raport"></SfButton>
+@code {
+    [Parameter] public string Url { get; set; } = "invoicing/exportCentralizare";
+    [Parameter] public string HeaderText { get; set; } = "Raport centralizare consum";
+    [Inject] HttpClient httpClient { get; set; }
+    [Inject] IJSRuntime jSRuntime { get; set; }
+    public DateTime StartDate { get; set; } = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+    public DateTime EndDate { get; set; } = (new DateTime(DateTime.Now.Year, DateTime.Now.Month + 1, 1)).AddDays(-1);
+    public async Task ExportFAZ()
+    {
+        var modelRaportare = new ReportRequest
+            {
+                StartDate = StartDate,
+                EndDate = EndDate
+            };
+        var response = await httpClient.PostAsJsonAsync(Url, modelRaportare);
+        if (response.IsSuccessStatusCode)
+        {
+            // Extract the filename from the Content-Disposition header
+            var contentDisposition = response.Content.Headers.ContentDisposition;
+            var fileName = contentDisposition?.FileNameStar ?? contentDisposition?.FileName ?? "downloaded-file.pdf";
+
+            var fileContent = await response.Content.ReadAsByteArrayAsync();
+
+            await jSRuntime.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(fileContent));
+
+        }
+    }
+}

@@ -1,0 +1,387 @@
+﻿@using ArhiParcurs.Client.Services
+@using ArhiParcurs.Shared.Models
+@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Calendars
+@using Syncfusion.Blazor.Cards
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.DataForm
+@using Syncfusion.Blazor.DropDowns
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Inputs
+@using ArhiParcurs.Shared.Models.Enums
+@using FilterType = Syncfusion.Blazor.DropDowns.FilterType
+<h3 class="text-center">@HeaderText</h3>
+
+
+<SfMediaQuery ActiveBreakpointChanged="LayoutChangedhandler"></SfMediaQuery>
+<SfDataForm Model="SheetModel" ColumnCount="FormColumn" ColumnSpacing="50px"
+            ButtonsAlignment="FormButtonsAlignment.Right"
+            OnValidSubmit="ValidSubmitHandler">
+    <FormValidator>
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+    </FormValidator>
+    <FormItems>
+        <div class="w-50">
+            <FormItem LabelText="Numar" Field="@nameof(Sheet.Number)" ColumnSpan="@FormItemColumnSpan"></FormItem>
+        </div>
+        <FormGroup ColumnSpan="2" LabelText="General" ID="Sectiunea1" ColumnCount="FormGroupColumn3" ColumnSpacing="15px">
+            <FormItem Field="@nameof(Sheet.Project)" ColumnSpan="1">
+                <Template>
+                    <SfDropDownList TItem="Project" TValue="int"
+                                    Placeholder="Proiect" FloatLabelType="FloatLabelType.Always"
+                                    @bind-Value="SheetModel.ProjectId" EnableVirtualization=true
+                                    AllowFiltering="true" FilterType="FilterType.Contains">
+                        <SfDataManager Url="api/projects" Adaptor="Adaptors.ODataV4Adaptor"></SfDataManager>
+                        <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
+                    </SfDropDownList>
+                </Template>
+            </FormItem>
+            <FormItem LabelText="Data Plecare" Field="@nameof(Sheet.DateBegin)" ColumnSpan="@FormItemColumnSpan">
+                <Template>
+                    <SfDateTimePicker TValue="DateTime" @bind-Value="SheetModel.DateBegin" FirstDayOfWeek="1" Placeholder="Plecare" FloatLabelType="FloatLabelType.Always"></SfDateTimePicker>
+                </Template>
+            </FormItem>
+            <FormItem LabelText="Data sosire" Field="@nameof(Sheet.DateEnd)" ColumnSpan="@FormItemColumnSpan">
+                <Template>
+                    <SfDateTimePicker TValue="DateTime" @bind-Value="SheetModel.DateEnd" FirstDayOfWeek="1" Placeholder="Sosire" FloatLabelType="FloatLabelType.Always"></SfDateTimePicker>
+                </Template>
+            </FormItem>
+            <FormItem LabelText="Vehicul" Field="@nameof(Sheet.VehicleId)" ColumnSpan="@FormItemColumnSpan">
+                <Template>
+                    <SfDropDownList TItem="Vehicle" TValue="int"
+                                    Placeholder="Vehicul" FloatLabelType="FloatLabelType.Always"
+                                    @bind-Value="SheetModel.VehicleId" EnableVirtualization=true
+                                    AllowFiltering="true" FilterType="FilterType.Contains" Query="@(new Query().Where(new WhereFilter(){Field="VehicleState",Operator="equal",value=0}))">
+                        <SfDataManager Url="api/vehicles" Adaptor="Adaptors.ODataV4Adaptor"></SfDataManager>
+                        <DropDownListFieldSettings Text="Number" Value="Id"></DropDownListFieldSettings>
+                        <DropDownListEvents TValue="int" TItem="Vehicle" ValueChange="GetSelectedVehicle"></DropDownListEvents>
+                    </SfDropDownList>
+                </Template>
+            </FormItem>
+            <FormItem LabelText="Sofer" Field="@nameof(Sheet.DriverId)" ColumnSpan="@FormItemColumnSpan">
+                <Template>
+                    <SfDropDownList TItem="Partner" TValue="int"
+                                    Placeholder="Sofer" FloatLabelType="FloatLabelType.Always"
+                                    @bind-Value="SheetModel.DriverId" EnableVirtualization=true
+                                    AllowFiltering="true" FilterType="FilterType.Contains">
+                        <SfDataManager Url="api/partners" Adaptor="Adaptors.ODataV4Adaptor"></SfDataManager>
+                        <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
+                    </SfDropDownList>
+                </Template>
+            </FormItem>
+            <FormItem LabelText="Completat de" Field="@nameof(Sheet.CreatorId)" ColumnSpan="@FormItemColumnSpan">
+                <Template>
+                    <SfDropDownList TItem="Partner" TValue="int"
+                                    Placeholder="Completat de" FloatLabelType="FloatLabelType.Always"
+                                    @bind-Value="SheetModel.CreatorId" EnableVirtualization=true
+                                    AllowFiltering="true" FilterType="FilterType.Contains">
+                        <SfDataManager Url="api/partners" Adaptor="Adaptors.ODataV4Adaptor"></SfDataManager>
+                        <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
+                    </SfDropDownList>
+                </Template>
+            </FormItem>
+
+        </FormGroup>
+        <FormGroup LabelText="Consum" ID="Sectiunea3" ColumnCount="FormGroupColumn4" ColumnSpan="2" ColumnSpacing="15px">
+            <FormItem Field="@nameof(Sheet.InitialFuel)" ColumnSpan="1">
+                <Template>
+                    <SfNumericTextBox Enabled="true" ShowSpinButton="false" @bind-Value="SheetModel.InitialFuel" Placeholder="Combustibil ramas in rezervor" FloatLabelType="FloatLabelType.Always">
+                        <NumericTextBoxEvents TValue="decimal" ValueChange="CalculateFuel"></NumericTextBoxEvents>
+                    </SfNumericTextBox>
+                </Template>
+            </FormItem>
+            <FormItem Field="@nameof(Sheet.InitialFuel)" ColumnSpan="1">
+                <Template>
+                    <div class="row">
+                        <div class="d-flex">
+                            <div class="me-2"><label class="sflabel">Consumat</label> <div>@SheetModel.Consumed.ToString("0.00") L</div></div>
+                            <div class="me-2"><label class="sflabel">Alimentari</label> <div>@SheetModel.Refuels.ToString("0.00") L</div></div>
+                            <div class="me-2"><label class="sflabel">Ramas</label> <div>@SheetModel.FuelLeft.ToString("0.00") L</div></div>
+                        </div>
+                    </div>
+                </Template>
+            </FormItem>
+            <FormItem Field="@nameof(Sheet.ConsumptionIncreaseId)" ColumnSpan="1">
+                <Template>
+                    <SfComboBox TItem="ConsumptionIncrease" TValue="int?"
+                                    Placeholder="Spor de consum" FloatLabelType="FloatLabelType.Always"
+                                    @bind-Value="SheetModel.ConsumptionIncreaseId"
+                                    AllowFiltering="true" FilterType="FilterType.Contains">
+                        <SfDataManager Url="api/consumptionincreases" Adaptor="Adaptors.ODataV4Adaptor"></SfDataManager>
+                        <ComboBoxFieldSettings Text="Name" Value="Id"></ComboBoxFieldSettings>
+                        <ComboBoxEvents TItem="ConsumptionIncrease" TValue="int?" ValueChange="@IncreaseChanged"></ComboBoxEvents>
+                    </SfComboBox>
+                </Template>
+            </FormItem>
+            <FormItem LabelText="Kilometrii parcursi" Field="@(nameof(Sheet.DrivenKilometers))" ColumnSpan="1">
+                <Template>
+                    <SfTextBox Enabled="false" Value="@($"{SheetModel.DrivenKilometers.ToString("0.00")} KM")" Placeholder="Total Km echiv." FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                </Template>
+            </FormItem>
+        </FormGroup>
+        <FormGroup ColumnCount="1" ColumnSpan="2" LabelText="Rute">
+            <FormItem Field="@nameof(Sheet.SheetRoutes)">
+                <Template>
+                    <SfGrid TValue="SheetRoute" DataSource="SheetModel.SheetRoutes" AllowTextWrap=true AllowPaging="true" AllowSorting="true"
+                            AllowExcelExport="true" Toolbar="@(new List<string>(){"Add","Edit","Delete"})">
+                        <GridEvents TValue="SheetRoute" OnActionComplete="OnActionComplete"></GridEvents>
+                        <GridEditSettings AllowAdding="IsVehicleSelected"
+                                          AllowDeleting="IsVehicleSelected" AllowEditing="IsVehicleSelected" Mode="EditMode.Dialog" Dialog="@(new DialogSettings(){ Width="80%"})">
+                            <Validator>
+                                <DataAnnotationsValidator></DataAnnotationsValidator>
+                            </Validator>
+                            <Template>
+                                @{
+                                        var data = context as SheetRoute;
+                                    }
+
+
+                                    @if (!CurrentSetting.WithoutRoutes)
+                                    {
+                                        <div class="row">
+                                            <div class="col">
+                                                <SfTextBox @bind-Value="data.Start" Placeholder="De la" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                                <ValidationMessage For="() => data.Start" />
+                                            </div>
+                                            <div class="col">
+                                                <SfTextBox @bind-Value="data.End" Placeholder="Pana la" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                                <ValidationMessage For="() => data.End" />
+                                            </div>
+                                        </div>
+                                    }
+                                        
+                                    <div class="row">
+                                        <div class="col">
+                                            <SfDateTimePicker @bind-Value="data.StartDate" TValue="DateTime" Placeholder="Data plecare" FloatLabelType="FloatLabelType.Always"></SfDateTimePicker>
+                                            <ValidationMessage For="() => data.StartDate" />
+                                        </div>
+                                        <div class="col">
+                                            <SfDateTimePicker @bind-Value="data.EndDate" TValue="DateTime" Placeholder="Data sosire" FloatLabelType="FloatLabelType.Always"></SfDateTimePicker>
+                                            <ValidationMessage For="() => data.EndDate" />
+                                        </div>
+                                    </div>
+                                    @if (!CurrentSetting.WithoutPurpose)
+                                    {
+                                        <div class="row">
+                                            <div class="col">
+                                                <SfTextBox @bind-Value="data.Purpose" Placeholder="Scopul deplasarii" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                                <ValidationMessage For="() => data.Purpose" />
+                                            </div>
+                                        </div>
+                                    }
+                                    <br />
+                                    <label class="sflabel">Kilometrii parcursi</label>
+                                    <hr />
+                                    <div class="row">
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.Distance1" Placeholder="Drum cat. I" FloatLabelType="FloatLabelType.Always">
+                                                <NumericTextBoxEvents TValue="decimal" ValueChange="@((args)=>ValueChangeHandler(args,ref data))"></NumericTextBoxEvents>
+                                            </SfNumericTextBox>
+                                        </div>
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.Distance2" Placeholder="Drum cat. II" FloatLabelType="FloatLabelType.Always">
+                                                <NumericTextBoxEvents TValue="decimal" ValueChange="@((args)=>ValueChangeHandler(args,ref data))"></NumericTextBoxEvents>
+                                            </SfNumericTextBox>
+                                        </div>
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.Distance3" Placeholder="Drum cat. III" FloatLabelType="FloatLabelType.Always">
+                                                <NumericTextBoxEvents TValue="decimal" ValueChange="@((args)=>ValueChangeHandler(args, ref data))"></NumericTextBoxEvents>
+                                            </SfNumericTextBox>
+                                        </div>
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.Distance4" Placeholder="Drum cat. IV" FloatLabelType="FloatLabelType.Always">
+                                                <NumericTextBoxEvents TValue="decimal" ValueChange="@((args)=>ValueChangeHandler(args,ref data))"></NumericTextBoxEvents>
+                                            </SfNumericTextBox>
+                                        </div>
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.Distance5" Placeholder="Drum cat. V" FloatLabelType="FloatLabelType.Always">
+                                                <NumericTextBoxEvents TValue="decimal" ValueChange="@((args)=>ValueChangeHandler(args,ref data))"></NumericTextBoxEvents>
+                                            </SfNumericTextBox>
+                                        </div>
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.Distance6" Placeholder="Drum cat. VI" FloatLabelType="FloatLabelType.Always">
+                                                <NumericTextBoxEvents TValue="decimal" ValueChange="@((args)=>ValueChangeHandler(args,ref data))"></NumericTextBoxEvents>
+                                            </SfNumericTextBox>
+                                        </div>
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.Distance6" Placeholder="Drum cat. VI" FloatLabelType="FloatLabelType.Always">
+                                                <NumericTextBoxEvents TValue="decimal" ValueChange="@((args)=>ValueChangeHandler(args,ref data))"></NumericTextBoxEvents>
+                                            </SfNumericTextBox>
+                                        </div>
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.TotalEquivalentDistance" Placeholder="Distanta echiv." FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                                        </div>
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.TotalDistance" Placeholder="Distanta" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                                        </div>
+
+                                    </div>
+                                    @if (!CurrentSetting.WithoutRoundtrip)
+                                    {
+                                        <div class="row">
+                                            <div class="col-3 mt-2">
+                                                <label class="sflabel">Tur/Return</label>
+                                                <SfCheckBox TChecked="bool" @bind-Checked="data.RoundTrip"></SfCheckBox>
+                                            </div>
+                                        </div>
+                                    }
+                                </Template>
+                            </GridEditSettings>
+                            <GridPageSettings PageSize="20"></GridPageSettings>
+                            <GridColumns>
+                                <GridColumn Field=@nameof(SheetRoute.Id) IsIdentity="true" IsPrimaryKey="true" Visible="false"></GridColumn>
+                                <GridColumn Field=@nameof(SheetRoute.StartDate) MinWidth="50" Width="100" HeaderText="Interval orar">
+                                    <Template>
+                                        @{
+                                            var data = context as SheetRoute;
+                                        }
+                                        <div>@data.StartDate.ToString("dd.MM hh:mm") - @data.EndDate.ToString("dd.MM hh:mm")</div>
+                                    </Template>
+                                </GridColumn>
+                                @if (!IsVehicleSelected)
+                                {
+                                    <div>Un vehicul trebuie să fie selectat înainte de fi accesat acest meniu!</div>
+                                }
+                                <GridColumn Field=@nameof(SheetRoute.Start) MinWidth="50" Width="100" HeaderText="Traseu" Visible="@(!CurrentSetting.WithoutRoutes)">
+                                    <Template>
+                                        @{
+                                            var data = context as SheetRoute;
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(data.VIA))
+                                        {
+                                            <div>@data.Start - @data.VIA - @data.End</div>
+                                        }
+                                        else
+                                        {
+                                            <div>@data.Start - @data.End</div>
+                                        }
+                                    </Template>
+                                </GridColumn>
+                                <GridColumn Field="@nameof(SheetRoute.Distance1)" MinWidth="50" Width="100" HeaderText="Cat. I"></GridColumn>
+                                <GridColumn Field="@nameof(SheetRoute.Distance2)" MinWidth="50" Width="100" HeaderText="Cat. II"></GridColumn>
+                                <GridColumn Field="@nameof(SheetRoute.Distance3)" MinWidth="50" Width="100" HeaderText="Cat. III"></GridColumn>
+                                <GridColumn Field="@nameof(SheetRoute.Distance4)" MinWidth="50" Width="100" HeaderText="Cat. IV"></GridColumn>
+                                <GridColumn Field="@nameof(SheetRoute.Distance5)" MinWidth="50" Width="100" HeaderText="Cat. V"></GridColumn>
+                                <GridColumn Field="@nameof(SheetRoute.Distance6)" MinWidth="50" Width="100" HeaderText="Cat. VI"></GridColumn>
+                                <GridColumn Field="@nameof(SheetRoute.RoundTrip)" MinWidth="50" Width="100" Type="ColumnType.Boolean" Visible="@(!CurrentSetting.WithoutRoundtrip)">
+                                    <Template>
+                                        @{
+                                            var data = context as SheetRoute;
+                                        }
+                                        @if (data.RoundTrip)
+                                        {
+                                            <div>Da</div>
+                                        }
+                                        else
+                                        {
+                                            <div>Nu</div>
+                                        }
+                                    </Template>
+                                </GridColumn>
+
+                                <GridColumn TextAlign="TextAlign.Right" MinWidth="50" Width="100" Field=@nameof(SheetRoute.TotalDistance) HeaderText="Distanta"></GridColumn>
+                                <GridColumn TextAlign="TextAlign.Right" MinWidth="50" Width="100" Field=@nameof(SheetRoute.TotalEquivalentDistance) HeaderText="Distanta echivalenta"></GridColumn>
+                            </GridColumns>
+                        </SfGrid>
+                    </Template>
+                </FormItem>
+            </FormGroup>
+            <FormGroup CssClass="mt-4" ColumnCount="1" ColumnSpan="2" LabelText="Alimentari">
+                <FormItem Field="@nameof(Sheet.Refuels)">
+                    <Template>
+                        <SfGrid TValue="Refuel" DataSource="SheetModel.RefuelsList" AllowTextWrap=true AllowPaging="true" AllowSorting="true"
+                                AllowExcelExport="true" Toolbar="@(new List<string>(){"Add","Edit","Delete"})">
+                            <GridEvents TValue="Refuel" OnActionComplete="OnActionCompleteRefuels"></GridEvents>
+                            <GridEditSettings AllowAdding="IsVehicleSelected"
+                                              AllowDeleting="IsVehicleSelected" AllowEditing="IsVehicleSelected" Mode="EditMode.Dialog" Dialog="@(new DialogSettings(){ Width="80%"})">
+                                <Validator>
+                                    <DataAnnotationsValidator></DataAnnotationsValidator>
+                                </Validator>
+                                <Template>
+                                    @{
+                                        var data = context as Refuel;
+                                    }
+
+
+                                    <div class="row">
+                                        <div class="col">
+                                            <SfTextBox @bind-Value="data.NrDocument" Placeholder="Numar document" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                            <ValidationMessage For="() => data.NrDocument" />
+                                        </div>
+                                        <div class="col">
+                                            <SfDatePicker @bind-Value="data.Date" TValue="DateTime" Placeholder="Data document" FloatLabelType="FloatLabelType.Always"></SfDatePicker>
+                                            <ValidationMessage For="() => data.Date" />
+                                        </div>
+
+                                    </div>
+                                    <div class="row">
+
+                                        <div class="col">
+                                            <SfDropDownList TItem="Provider" TValue="int"
+                                                            Placeholder="Furnizor" FloatLabelType="FloatLabelType.Always"
+                                                            @bind-Value="data.ProviderId" EnableVirtualization=true
+                                                            AllowFiltering="true" FilterType="FilterType.Contains">
+                                                <SfDataManager Url="api/providers" Adaptor="Adaptors.ODataV4Adaptor"></SfDataManager>
+                                                <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
+                                            </SfDropDownList>
+                                            <ValidationMessage For="() => data.ProviderId" />
+                                        </div>
+                                        <div class="col">
+                                            <SfDropDownList TItem="Fuel" TValue="int"
+                                                            Placeholder="Combustibil" FloatLabelType="FloatLabelType.Always"
+                                                            @bind-Value="data.FuelId" EnableVirtualization=true
+                                                            AllowFiltering="true" FilterType="FilterType.Contains">
+                                                <SfDataManager Url="api/fuels" Adaptor="Adaptors.ODataV4Adaptor"></SfDataManager>
+                                                <DropDownListFieldSettings Text="Name" Value="Id"></DropDownListFieldSettings>
+                                                <DropDownListEvents TValue="int" TItem="Fuel" ValueChange="@((args)=>{FuelTVA=args.ItemData.TVA;})"></DropDownListEvents>
+                                            </SfDropDownList>
+                                            <ValidationMessage For="() => data.ProviderId" />
+                                        </div>
+                                    </div>
+                                    <br />
+                                    <label class="sflabel">Pret</label>
+                                    <hr />
+                                    <div class="row">
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.Quantity" Placeholder="Cantitate" FloatLabelType="FloatLabelType.Always">
+                                                <NumericTextBoxEvents TValue="decimal" ValueChange="@((args)=>ValueChangeHandlerRefuels(args,ref data))"></NumericTextBoxEvents>
+                                            </SfNumericTextBox>
+                                        </div>
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.FuelPrice" Placeholder="Pret combustibil /L" FloatLabelType="FloatLabelType.Always">
+                                                <NumericTextBoxEvents TValue="decimal" ValueChange="@((args)=>ValueChangeHandlerRefuels(args,ref data))"></NumericTextBoxEvents>
+                                            </SfNumericTextBox>
+                                        </div>
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.PriceWithoutTva" Placeholder="Pret total fara tva" FloatLabelType="FloatLabelType.Always">
+                                                <NumericTextBoxEvents TValue="decimal" ValueChange="@((args)=>ValueChangeHandlerRefuels(args, ref data))"></NumericTextBoxEvents>
+                                            </SfNumericTextBox>
+                                        </div>
+                                        <div class="col">
+                                            <SfNumericTextBox TValue="decimal" ShowSpinButton="false" @bind-Value="data.PriceWithTva" Placeholder="Pret total cu tva" FloatLabelType="FloatLabelType.Always">
+                                                <NumericTextBoxEvents TValue="decimal" ValueChange="@((args)=>ValueChangeHandlerRefuels(args,ref data))"></NumericTextBoxEvents>
+                                            </SfNumericTextBox>
+                                        </div>
+                                    </div>
+                                </Template>
+                            </GridEditSettings>
+                            <GridPageSettings PageSize="20"></GridPageSettings>
+                            <GridColumns>
+                                <GridColumn Field=@nameof(Refuel.Id) IsIdentity="true" IsPrimaryKey="true" Visible="false"></GridColumn>
+                                <GridColumn Field=@nameof(Refuel.Date) MinWidth="50" Width="100" HeaderText="Data document" Format="dd/MM/yyyy"></GridColumn>
+                                <GridColumn Field=@nameof(Refuel.NrDocument) MinWidth="50" Width="100" HeaderText="Numar document"></GridColumn>
+                                <GridColumn Field="@nameof(Refuel.Quantity)" MinWidth="50" Width="100" HeaderText="Cantitate"></GridColumn>
+                                <GridColumn Field="@nameof(Refuel.FuelPrice)" MinWidth="50" Width="100" HeaderText="Pret combustibil /L"></GridColumn>
+                                <GridColumn Field="@nameof(Refuel.PriceWithoutTva)" MinWidth="50" Width="100" HeaderText="Pret fara TVA"></GridColumn>
+                                <GridColumn Field="@nameof(Refuel.PriceWithTva)" MinWidth="50" Width="100" HeaderText="Pret cu TVA"></GridColumn>
+                            </GridColumns>
+                        </SfGrid>
+                    </Template>
+                </FormItem>
+            </FormGroup>
+        </FormItems>
+    </SfDataForm>
+
+
+

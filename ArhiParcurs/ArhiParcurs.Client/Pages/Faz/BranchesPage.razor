@@ -1,0 +1,55 @@
+﻿@page "/branches"
+@using ArhiParcurs.Shared.Models
+@using ArhiParcurs.Shared.Models.Enums
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.DropDowns
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Inputs
+@attribute [Authorize]
+<h3>Filiale</h3>
+
+<SfGrid TValue="Branch" AllowPaging="true" AllowSorting="true" AllowFiltering="true"
+        AllowExcelExport="true" Toolbar="@(new List<string>(){"Add","Edit","Delete"})">
+    <GridEditSettings AllowAdding="true" AllowDeleting="true" AllowEditing="true" Mode="EditMode.Dialog">
+        <Template>
+            @{
+                var data = context as Branch;
+            }
+            <EditForm Model="data" Context="editFormContext">
+                <DataAnnotationsValidator></DataAnnotationsValidator>
+                <div class="row">
+                    <div class="col">
+                        <SfTextBox @bind-Value="data.Name" Placeholder="Denumire" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                    </div>
+                    <div class="col">
+                        <SfTextBox @bind-Value="data.Code" Placeholder="Cod" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <SfTextArea Width="100%"  @bind-Value="data.Description" Placeholder="Description" FloatLabelType="FloatLabelType.Always"></SfTextArea>
+                    </div>
+                </div>
+            </EditForm>
+        </Template>
+    </GridEditSettings>
+    <GridPageSettings PageSize="20"></GridPageSettings>
+    <SfDataManager Url="api/branches"  Adaptor="Syncfusion.Blazor.Adaptors.ODataV4Adaptor"></SfDataManager>
+    <GridColumns>
+        <GridColumn Field=@nameof(Branch.Id) IsIdentity="true" IsPrimaryKey="true" Visible="false"></GridColumn>
+        <GridColumn Field=@nameof(Branch.Name) HeaderText="Nume"></GridColumn>
+        <GridColumn Field=@nameof(Branch.Code) HeaderText="Cod"></GridColumn>
+        <GridColumn Field=@nameof(Branch.Description) HeaderText="Descriere">
+            <EditTemplate>
+                @{
+                    var data = context as Branch;
+                }
+                <SfTextArea  Width="100%" ResizeMode="Resize.Vertical" @bind-Value="data.Description" Placeholder="Descriere" FloatLabelType="FloatLabelType.Always"></SfTextArea>
+            </EditTemplate>
+        </GridColumn>
+    </GridColumns>
+</SfGrid>
+
+@code {
+
+}

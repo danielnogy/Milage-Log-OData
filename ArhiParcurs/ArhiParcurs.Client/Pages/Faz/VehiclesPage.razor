@@ -1,0 +1,58 @@
+﻿@page "/vehicles"
+@using ArhiParcurs.Shared.Models
+@using ArhiParcurs.Shared.Models.Enums
+@using Syncfusion.Blazor.Data
+@using Syncfusion.Blazor.DropDowns
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Inputs
+@attribute [Authorize]
+<h3>Vehicule</h3>
+
+<SfGrid TValue="Vehicle" AllowPaging="true" AllowSorting="true" AllowFiltering="true"
+        AllowExcelExport="true" Toolbar="@(new List<string>(){"Add","Edit","Delete"})">
+    <GridEditSettings AllowAdding="true" AllowDeleting="true" AllowEditing="true" Mode="EditMode.Dialog"></GridEditSettings>
+    <GridPageSettings PageSize="20"></GridPageSettings>
+    <SfDataManager Url="api/vehicles" Adaptor="Syncfusion.Blazor.Adaptors.ODataV4Adaptor"></SfDataManager>
+    <GridColumns>
+        <GridColumn Field=@nameof(Vehicle.Id) IsIdentity="true" IsPrimaryKey="true" Visible="false"></GridColumn>
+        <GridColumn Field=@nameof(Vehicle.Number) HeaderText="Numar"></GridColumn>
+        <GridColumn Field=@nameof(Vehicle.Brand) HeaderText="Brand"></GridColumn>
+        <GridColumn Field=@nameof(Vehicle.Model) HeaderText="Model"></GridColumn>
+        <GridColumn Field=@nameof(Vehicle.FuelConsumption) HeaderText="Consum L/100km"></GridColumn>
+        <GridColumn Field=@nameof(Vehicle.Kilometers) HeaderText="Kilometri" Type="ColumnType.Integer"></GridColumn>
+        <GridColumn Field=@nameof(Vehicle.VIN) HeaderText="Serie sasiu"></GridColumn>
+        <GridColumn Field=@nameof(Vehicle.InitialFuelTank) HeaderText="Combustibil initial"></GridColumn>
+        <GridForeignColumn TValue="Fuel" Field=@nameof(Vehicle.FuelId) ForeignKeyField="Id" HeaderText="Combustibil" ForeignKeyValue="Name" Width="150">
+            <SfDataManager Url="api/fuels" CrossDomain="true" Adaptor=" Syncfusion.Blazor.Adaptors.ODataV4Adaptor"></SfDataManager>
+        </GridForeignColumn>
+        <GridForeignColumn TValue="Branch" Field=@nameof(Vehicle.BranchId) ForeignKeyField="Id" HeaderText="Filiala" ForeignKeyValue="Name" Width="150">
+            <SfDataManager Url="api/branches" CrossDomain="true" Adaptor="Syncfusion.Blazor.Adaptors.ODataV4Adaptor"></SfDataManager>
+        </GridForeignColumn>
+        <GridColumn Field=@nameof(Vehicle.VehicleState) HeaderText="Stare">
+            <Template>
+                @{
+                    var data = context as Vehicle;
+                    <div>@((VehicleStateEnum?)data?.VehicleState)</div>
+                }
+            </Template>
+            <EditTemplate>
+                @{
+                    var data = context as Vehicle;
+                }
+                <SfDropDownList TValue="VehicleStateEnum?" TItem="string"
+                                DataSource="@(Enum.GetNames(typeof(VehicleStateEnum)))"
+                                Value="(VehicleStateEnum)data.VehicleState" Placeholder="Stare" FloatLabelType="FloatLabelType.Always">
+                    <DropDownListEvents TValue="VehicleStateEnum?" TItem="string" ValueChange="@((args)=>Change(args,ref data))"></DropDownListEvents>
+                </SfDropDownList>
+            </EditTemplate>
+        </GridColumn>
+    </GridColumns>
+</SfGrid>
+
+@code {
+    private void Change(ChangeEventArgs<VehicleStateEnum?,string> args, ref Vehicle data)
+    {
+        if(data !=null)
+            data.VehicleState=(int)args.Value;
+    }
+}
